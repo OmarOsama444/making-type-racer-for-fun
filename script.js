@@ -116,8 +116,8 @@ input.addEventListener("input", () => {
     const y = targetRect.top - parentRect.top;
 
     // Move cursor smoothly in both directions
-    cursor.style.transform = `translate(${x}px, ${y}px)`;
-
+    cursor.style.left = `${targetRect.left}px`;
+    cursor.style.top = `${targetRect.top}px`;
 });
 
 startBtn.addEventListener("click", startGame);
