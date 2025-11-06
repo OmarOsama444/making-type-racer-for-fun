@@ -5,43 +5,114 @@ const quotes = [
     "Racing against time improves your accuracy."
 ];
 
-const quoteDisplay = document.getElementById("quote");
+const quoteEl = document.getElementById("quote");
 const input = document.getElementById("input");
 const timerDisplay = document.getElementById("timer");
+const wpmDisplay = document.getElementById("wpm");
 const startBtn = document.getElementById("startBtn");
 const result = document.getElementById("result");
+const cursor = document.getElementById("cursor");
+const customInputContainer = document.getElementById("customInputContainer");
+const customParagraph = document.getElementById("customParagraph");
+const setParagraphBtn = document.getElementById("setParagraphBtn");
 
-let startTime, currentQuote;
+let startTime, currentQuote, timerInterval;
 
+// Allow user to add custom paragraph
+setParagraphBtn.addEventListener("click", () => {
+    const customText = customParagraph.value.trim();
+    if (customText) {
+        quotes.push(customText);
+        alert("✅ Custom paragraph added!");
+        customParagraph.value = "";
+    }
+});
+
+// ------------------ START GAME ------------------
 function startGame() {
-    // Reset UI
     input.value = "";
     result.textContent = "";
     input.disabled = false;
     input.focus();
 
-    // Pick a random quote
-    currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    quoteDisplay.innerHTML = currentQuote;
+    // Hide custom input section during game
+    customInputContainer.classList.add("hidden");
 
-    // Start timer
+    // Pick random quote
+    currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    renderQuote();
+
     startTime = new Date();
     timerDisplay.textContent = "0.00";
+    wpmDisplay.textContent = "0";
 
-    // Update timer every 100ms
-    const timer = setInterval(() => {
-        const elapsed = (new Date() - startTime) / 1000;
-        timerDisplay.textContent = elapsed.toFixed(2);
-        if (input.value === currentQuote) {
-            clearInterval(timer);
-            endGame(elapsed);
-        }
-    }, 100);
+    clearInterval(timerInterval);
+    timerInterval = setInterval(updateStats, 100);
 }
 
-function endGame(time) {
+// ------------------ UPDATE TIMER & WPM ------------------
+function updateStats() {
+    const elapsed = (new Date() - startTime) / 1000;
+    timerDisplay.textContent = elapsed.toFixed(2);
+
+    const wordsTyped = input.value.trim().split(/\s+/).filter(Boolean).length;
+    const wpm = (wordsTyped / (elapsed / 60)) || 0;
+    wpmDisplay.textContent = Math.floor(wpm);
+
+    if (input.value === currentQuote) {
+        clearInterval(timerInterval);
+        endGame(elapsed, wpm);
+    }
+}
+
+// ------------------ END GAME ------------------
+function endGame(time, wpm) {
     input.disabled = true;
-    result.textContent = `🎉 You finished in ${time.toFixed(2)} seconds!`;
+    result.textContent = `🎉 Finished in ${time.toFixed(2)}s — ${Math.floor(wpm)} WPM!`;
+    customInputContainer.classList.remove("hidden"); // show custom input again
 }
+
+// ------------------ RENDER QUOTE ------------------
+function renderQuote() {
+    quoteEl.innerHTML = "";
+    for (let char of currentQuote) {
+        const span = document.createElement("span");
+        span.textContent = char;
+        quoteEl.appendChild(span);
+    }
+    cursor.style.left = "0";
+}
+
+// ------------------ HANDLE INPUT ------------------
+input.addEventListener("input", () => {
+    const chars = quoteEl.querySelectorAll("span");
+    const typedText = input.value.split("");
+
+    chars.forEach((span, index) => {
+        const char = typedText[index];
+        if (char == null) {
+            span.classList.remove("text-green-400", "text-red-500");
+        } else if (char === span.textContent) {
+            span.classList.add("text-green-400");
+            span.classList.remove("text-red-500");
+        } else {
+            span.classList.add("text-red-500");
+            span.classList.remove("text-green-400");
+        }
+    });
+
+    // Move cursor
+    const nextChar = chars[typedText.length];
+    if (nextChar) {
+        const rect = nextChar.getBoundingClientRect();
+        const parentRect = quoteEl.getBoundingClientRect();
+        cursor.style.transform = `translateX(${rect.left - parentRect.left}px)`;
+    } else {
+        const lastChar = chars[chars.length - 1];
+        const rect = lastChar.getBoundingClientRect();
+        const parentRect = quoteEl.getBoundingClientRect();
+        cursor.style.transform = `translateX(${rect.right - parentRect.left}px)`;
+    }
+});
 
 startBtn.addEventListener("click", startGame);
