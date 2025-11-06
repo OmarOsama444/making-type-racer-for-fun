@@ -1,8 +1,5 @@
 const quotes = [
-    "The quick brown fox jumps over the lazy dog.",
-    "Typing fast requires practice and focus.",
-    "JavaScript and Tailwind make web dev fun!",
-    "Racing against time improves your accuracy."
+    "Balloons are pretty and come in different colors, different shapes, different sizes, and they can even adjust sizes"
 ];
 
 const quoteEl = document.getElementById("quote");
@@ -33,6 +30,8 @@ function startGame() {
     input.value = "";
     result.textContent = "";
     input.disabled = false;
+    input.classList.remove("hidden");
+    input.classList.add("hidden-input");
     input.focus();
 
     // Hide custom input section during game
@@ -70,6 +69,8 @@ function endGame(time, wpm) {
     input.disabled = true;
     result.textContent = `🎉 Finished in ${time.toFixed(2)}s — ${Math.floor(wpm)} WPM!`;
     customInputContainer.classList.remove("hidden"); // show custom input again
+    input.classList.add("hidden"); // hide typing area again after game ends
+
 }
 
 // ------------------ RENDER QUOTE ------------------
@@ -102,17 +103,21 @@ input.addEventListener("input", () => {
     });
 
     // Move cursor
-    const nextChar = chars[typedText.length];
-    if (nextChar) {
-        const rect = nextChar.getBoundingClientRect();
-        const parentRect = quoteEl.getBoundingClientRect();
-        cursor.style.transform = `translateX(${rect.left - parentRect.left}px)`;
+    const parentRect = quoteEl.getBoundingClientRect();
+    let targetRect;
+
+    if (typedText.length < chars.length) {
+        targetRect = chars[typedText.length].getBoundingClientRect();
     } else {
-        const lastChar = chars[chars.length - 1];
-        const rect = lastChar.getBoundingClientRect();
-        const parentRect = quoteEl.getBoundingClientRect();
-        cursor.style.transform = `translateX(${rect.right - parentRect.left}px)`;
+        targetRect = chars[chars.length - 1].getBoundingClientRect();
     }
+
+    const x = targetRect.left - parentRect.left;
+    const y = targetRect.top - parentRect.top;
+
+    // Move cursor smoothly in both directions
+    cursor.style.transform = `translate(${x}px, ${y}px)`;
+
 });
 
 startBtn.addEventListener("click", startGame);

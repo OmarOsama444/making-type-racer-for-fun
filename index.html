@@ -16,6 +16,13 @@
             transition: transform 0.08s linear;
         }
 
+        .hidden-input {
+            opacity: 0;
+            position: absolute;
+            left: -9999px;
+            /* optional, to move it off-screen */
+        }
+
         @keyframes blink {
             50% {
                 opacity: 0;
@@ -33,9 +40,7 @@
     </div>
 
     <!-- INPUT (HIDDEN WHILE TYPING) -->
-    <textarea id="input" rows="3"
-        class="w-full max-w-2xl p-3 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400 opacity-0"
-        placeholder="Start typing here..." disabled></textarea>
+    <textarea id="input" rows="3" class="hidden" placeholder="Start typing here..." disabled></textarea>
 
     <!-- STATS -->
     <div class="mt-4 flex gap-8 text-lg">
