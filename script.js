@@ -1,7 +1,3 @@
-const quotes = [
-    "Balloons are pretty and come in different colors, different shapes, different sizes, and they can even adjust sizes"
-];
-
 const quoteEl = document.getElementById("quote");
 const input = document.getElementById("input");
 const timerDisplay = document.getElementById("timer");
@@ -11,22 +7,23 @@ const result = document.getElementById("result");
 const cursor = document.getElementById("cursor");
 const customInputContainer = document.getElementById("customInputContainer");
 const customParagraph = document.getElementById("customParagraph");
-const setParagraphBtn = document.getElementById("setParagraphBtn");
 
 let startTime, currentQuote, timerInterval;
 
-// Allow user to add custom paragraph
-setParagraphBtn.addEventListener("click", () => {
-    const customText = customParagraph.value.trim();
-    if (customText) {
-        quotes.push(customText);
-        alert("✅ Custom paragraph added!");
-        customParagraph.value = "";
-    }
-});
-
 // ------------------ START GAME ------------------
 function startGame() {
+    const customText = customParagraph.value.trim();
+
+    // Require user to input a paragraph
+    if (!customText) {
+        alert("⚠️ Please enter a paragraph before starting the game!");
+        return;
+    }
+
+    // Use user's paragraph only
+    currentQuote = customText;
+
+    // Reset states
     input.value = "";
     result.textContent = "";
     input.disabled = false;
@@ -34,11 +31,9 @@ function startGame() {
     input.classList.add("hidden-input");
     input.focus();
 
-    // Hide custom input section during game
+    // Hide custom input during the game
     customInputContainer.classList.add("hidden");
 
-    // Pick random quote
-    currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
     renderQuote();
 
     startTime = new Date();
@@ -68,9 +63,8 @@ function updateStats() {
 function endGame(time, wpm) {
     input.disabled = true;
     result.textContent = `🎉 Finished in ${time.toFixed(2)}s — ${Math.floor(wpm)} WPM!`;
-    customInputContainer.classList.remove("hidden"); // show custom input again
-    input.classList.add("hidden"); // hide typing area again after game ends
-
+    customInputContainer.classList.remove("hidden");
+    input.classList.add("hidden");
 }
 
 // ------------------ RENDER QUOTE ------------------
@@ -81,7 +75,16 @@ function renderQuote() {
         span.textContent = char;
         quoteEl.appendChild(span);
     }
-    cursor.style.left = "0";
+
+    // Position cursor at the start of the quote
+    const firstSpan = quoteEl.querySelector("span");
+    if (firstSpan) {
+        const rect = firstSpan.getBoundingClientRect();
+        cursor.style.position = "fixed";
+        cursor.style.left = `${rect.left}px`;
+        cursor.style.top = `${rect.top}px`;
+        cursor.style.height = `${rect.height}px`;
+    }
 }
 
 // ------------------ HANDLE INPUT ------------------
@@ -103,21 +106,17 @@ input.addEventListener("input", () => {
     });
 
     // Move cursor
-    const parentRect = quoteEl.getBoundingClientRect();
     let targetRect;
-
     if (typedText.length < chars.length) {
         targetRect = chars[typedText.length].getBoundingClientRect();
     } else {
         targetRect = chars[chars.length - 1].getBoundingClientRect();
     }
 
-    const x = targetRect.left - parentRect.left;
-    const y = targetRect.top - parentRect.top;
-
-    // Move cursor smoothly in both directions
+    cursor.style.position = "fixed";
     cursor.style.left = `${targetRect.left}px`;
     cursor.style.top = `${targetRect.top}px`;
+    cursor.style.height = `${targetRect.height}px`;
 });
 
 startBtn.addEventListener("click", startGame);
